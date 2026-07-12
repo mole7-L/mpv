@@ -9,5 +9,3 @@ scripts/
 
 third_party
     External scripts from other authors
-
-
