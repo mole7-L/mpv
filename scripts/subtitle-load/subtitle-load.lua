@@ -3,11 +3,24 @@ local utils = require "mp.utils"
 local msg = require "mp.msg"
 local opts = require "mp.options"
 
-local EXTENSION_PATTERN = "%.[^.]+$"
+local EXTENSION_PATTERN_GSUB = "%.[^.]+$"
+local EXTENSION_PATTERN_MATCH = "%.([^%.]+)$"
+
+local SUBTITLE_EXTENSIONS = {
+  ass = true,
+  ssa = true,
+  srt = true,
+  vtt = true,
+  sub = true,
+}
 
 local function get_basename(filename)
-  local basename = filename:gsub(EXTENSION_PATTERN, "")
+  local basename = filename:gsub(EXTENSION_PATTERN_GSUB, "")
   return basename
+end
+
+local function get_extension(filename)
+  return filename:match(EXTENSION_PATTERN_MATCH)
 end
 
 -- Get the current video's information
@@ -62,12 +75,17 @@ end
 local function scan_subtitles(directory)
   local files = utils.readdir(directory, "files")
 
+  table.sort(files)
+
   for _, filename in ipairs(files) do
+    local ext = get_extension(filename)
     local subtitle_path = utils.join_path(directory, filename)
-    mp.commandv(
-      "sub-add",
-      subtitle_path
-    )
+    if SUBTITLE_EXTENSIONS[ext] then
+      mp.commandv(
+        "sub-add",
+        subtitle_path
+      )
+    end
   end
 end
 
