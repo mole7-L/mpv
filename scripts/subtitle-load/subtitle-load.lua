@@ -1,6 +1,7 @@
 local mp = require "mp"
 local utils = require "mp.utils"
 local msg = require "mp.msg"
+local opts = require "mp.options"
 
 local EXTENSION_PATTERN = "%.[^.]+$"
 
@@ -23,7 +24,7 @@ local function get_video_info()
 end
 
 local options = {
-  subtitle_folder = "Subs"
+  subtitle_folders = "Subs"
 }
 
 local function is_directory(path)
@@ -32,16 +33,29 @@ local function is_directory(path)
   return info and info.is_dir
 end
 
+local function split(str, delimiter)
+  local result = {}
+
+  for item in string.gmatch(str, "([^" .. delimiter .. "]+)") do
+    table.insert(result, item)
+  end
+
+  return result
+end
+
 -- Calculate the subtitle directory based on the video information
 local function get_subtitle_directory(video)
-  local subtitle_root = utils.join_path(video.directory, options.subtitle_folder)
-  local subtitle_directory = utils.join_path(subtitle_root, video.basename)
+  local subtitle_folder_list = split(options.subtitle_folders, ",")
 
-  if is_directory(subtitle_directory) then
-    return subtitle_directory
-  end 
+  for _,folder in ipairs(subtitle_folder_list) do
+    local subtitle_root = utils.join_path(video.directory, folder)
+    local subtitle_directory = utils.join_path(subtitle_root, video.basename)
 
-    return nil
+    if is_directory(subtitle_directory) then
+      return subtitle_directory
+    end 
+  end
+  return nil
 end
 
 -- Scan subtitles
@@ -66,15 +80,17 @@ local function load_external_subtitles(files)
 end
 
 local function load_subtitles()
-    local video = get_video_info()
+  opts.read_options(options)
 
-    local directory = get_subtitle_directory(video)
+  local video = get_video_info()
 
-    if not directory then
-        return
-    end
+  local directory = get_subtitle_directory(video)
+  msg.info("subtitle directory = " .. tostring(directory))
+  if not directory then
+      return
+  end
 
-    scan_subtitles(directory)
+  scan_subtitles(directory)
 end
 
 mp.register_event("file-loaded", load_subtitles)
