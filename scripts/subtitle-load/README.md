@@ -50,3 +50,17 @@ Example:
 ```ini
 subtitle_folders=Subs,subs
 ```
+
+### autoload
+
+Type: bool
+
+Default: yes
+
+Function: Automatically load subtitles or not
+
+Example:
+
+```ini
+autoload=no
+```

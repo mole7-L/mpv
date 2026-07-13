@@ -37,7 +37,8 @@ local function get_video_info()
 end
 
 local options = {
-  subtitle_folders = "Subs"
+  subtitle_folders = "Subs",
+  autoload = true
 }
 
 local function is_directory(path)
@@ -89,12 +90,16 @@ local function scan_subtitles(directory)
   end
 end
 
--- Whether embedded subtitles exist
-local function has_embedded_subtitles()
-end
+local function select_default_subtitle()
+  local sid = mp.get_property_number("sid")
 
--- Mount subtitles
-local function load_external_subtitles(files)
+  if sid and sid >= 0 then
+    if options.autoload then
+      mp.set_property_number("sid", 1)
+    else
+      mp.set_property_number("sid", 0)
+    end
+  end
 end
 
 local function load_subtitles()
@@ -103,12 +108,13 @@ local function load_subtitles()
   local video = get_video_info()
 
   local directory = get_subtitle_directory(video)
-  msg.info("subtitle directory = " .. tostring(directory))
   if not directory then
       return
   end
 
   scan_subtitles(directory)
+
+  select_default_subtitle()
 end
 
 mp.register_event("file-loaded", load_subtitles)
